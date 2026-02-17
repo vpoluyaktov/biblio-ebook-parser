@@ -69,18 +69,16 @@ func (p *Parser) parseFromBytes(data []byte) (*parser.Book, error) {
 		return p.parseFromZip(data)
 	}
 
-	// Sanitize XML
-	sanitizedData := sanitizeFB2XML(data)
-
-	// Parse FB2 XML
+	// Parse FB2 XML - try with original data first to preserve charset
 	var fb2 fb2Document
-	decoder := xml.NewDecoder(bytes.NewReader(sanitizedData))
+	decoder := xml.NewDecoder(bytes.NewReader(data))
 	decoder.CharsetReader = charsetReader
 	decoder.Strict = false
 
 	if err := decoder.Decode(&fb2); err != nil {
-		// Try with original data as fallback
-		decoder2 := xml.NewDecoder(bytes.NewReader(data))
+		// If that fails, try with sanitized data
+		sanitizedData := sanitizeFB2XML(data)
+		decoder2 := xml.NewDecoder(bytes.NewReader(sanitizedData))
 		decoder2.CharsetReader = charsetReader
 		decoder2.Strict = false
 
@@ -356,10 +354,10 @@ type fb2Body struct {
 }
 
 type fb2Section struct {
-	Title      fb2Title     `xml:"title"`
-	Paragraphs []fb2Para    `xml:"p"`
+	Title      fb2Title      `xml:"title"`
+	Paragraphs []fb2Para     `xml:"p"`
 	Epigraphs  []fb2Epigraph `xml:"epigraph"`
-	Sections   []fb2Section `xml:"section"`
+	Sections   []fb2Section  `xml:"section"`
 }
 
 type fb2Title struct {

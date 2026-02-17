@@ -1,56 +1,11 @@
 package fb2
 
-import (
-	"regexp"
-	"unicode/utf8"
-
-	"golang.org/x/text/encoding/charmap"
-)
+import "regexp"
 
 func sanitizeFB2XML(data []byte) []byte {
-	if !utf8.Valid(data) {
-		data = fixInvalidUTF8(data)
-	}
-
-	data = removeIllegalXMLChars(data)
-	data = fixUnescapedAmpersands(data)
-	data = fixMalformedTags(data)
-
+	// Don't do any sanitization for now - let XML decoder handle everything
+	// including charset conversion via charsetReader
 	return data
-}
-
-func fixInvalidUTF8(data []byte) []byte {
-	result := make([]byte, 0, len(data))
-	for len(data) > 0 {
-		r, size := utf8.DecodeRune(data)
-		if r == utf8.RuneError && size == 1 {
-			if data[0] >= 0x80 {
-				decoded := charmap.Windows1251.DecodeByte(data[0])
-				result = utf8.AppendRune(result, decoded)
-			} else {
-				result = append(result, ' ')
-			}
-			data = data[1:]
-		} else {
-			result = utf8.AppendRune(result, r)
-			data = data[size:]
-		}
-	}
-	return result
-}
-
-func removeIllegalXMLChars(data []byte) []byte {
-	result := make([]byte, 0, len(data))
-	for len(data) > 0 {
-		r, size := utf8.DecodeRune(data)
-		if r == 0x9 || r == 0xA || r == 0xD || (r >= 0x20 && r <= 0xD7FF) || (r >= 0xE000 && r <= 0xFFFD) || (r >= 0x10000 && r <= 0x10FFFF) {
-			result = utf8.AppendRune(result, r)
-		} else {
-			result = append(result, ' ')
-		}
-		data = data[size:]
-	}
-	return result
 }
 
 func fixUnescapedAmpersands(data []byte) []byte {
@@ -58,11 +13,10 @@ func fixUnescapedAmpersands(data []byte) []byte {
 	i := 0
 	for i < len(data) {
 		if data[i] == '&' {
-			// Check if this is a valid entity
-			remaining := string(data[i:])
-			if regexp.MustCompile(`^&(amp|lt|gt|quot|apos);`).MatchString(remaining) ||
-				regexp.MustCompile(`^&#[0-9]+;`).MatchString(remaining) ||
-				regexp.MustCompile(`^&#x[0-9a-fA-F]+;`).MatchString(remaining) {
+			// Check if this is a valid entity - work with bytes directly
+			// to avoid charset corruption from string conversion
+			remaining := data[i:]
+			if isValidEntity(remaining) {
 				// Valid entity, keep as-is
 				result = append(result, data[i])
 			} else {
@@ -77,6 +31,46 @@ func fixUnescapedAmpersands(data []byte) []byte {
 		i++
 	}
 	return result
+}
+
+// isValidEntity checks if bytes start with a valid XML entity (ASCII-only check)
+func isValidEntity(data []byte) bool {
+	if len(data) < 4 {
+		return false
+	}
+	// Check for &amp; &lt; &gt; &quot; &apos;
+	if len(data) >= 5 && string(data[:5]) == "&amp;" {
+		return true
+	}
+	if len(data) >= 4 && string(data[:4]) == "&lt;" {
+		return true
+	}
+	if len(data) >= 4 && string(data[:4]) == "&gt;" {
+		return true
+	}
+	if len(data) >= 6 && string(data[:6]) == "&quot;" {
+		return true
+	}
+	if len(data) >= 6 && string(data[:6]) == "&apos;" {
+		return true
+	}
+	// Check for &#123; or &#xAB; (numeric entities)
+	if data[1] == '#' {
+		for j := 2; j < len(data) && j < 12; j++ {
+			if data[j] == ';' {
+				return true
+			}
+			if j == 2 && data[j] == 'x' {
+				continue // hex entity
+			}
+			if !((data[j] >= '0' && data[j] <= '9') ||
+				(data[j] >= 'a' && data[j] <= 'f') ||
+				(data[j] >= 'A' && data[j] <= 'F')) {
+				return false
+			}
+		}
+	}
+	return false
 }
 
 func fixMalformedTags(data []byte) []byte {
