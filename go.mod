@@ -1,3 +1,5 @@
 module github.com/vpoluyaktov/biblio-ebook-parser
 
-go 1.22.2
+go 1.24.0
+
+require golang.org/x/text v0.34.0
