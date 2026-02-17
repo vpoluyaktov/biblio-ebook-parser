@@ -79,7 +79,7 @@ func extractChaptersFromTOC(zr *zip.Reader, packageBaseDir string, manifestMap m
 
 	htmlCache := make(map[string]string)
 	chapters := make([]parser.Chapter, 0, len(entries))
-	
+
 	for i, entry := range entries {
 		if entry.Path == "" || strings.TrimSpace(entry.Title) == "" {
 			continue
@@ -126,7 +126,7 @@ func extractChaptersFromTOC(zr *zip.Reader, packageBaseDir string, manifestMap m
 
 		title := strings.TrimSpace(entry.Title)
 		title = extractChapterTitle(segment, title)
-		
+
 		elements := htmlToElements(segment)
 		chapters = append(chapters, parser.Chapter{
 			ID:       fmt.Sprintf("toc-%d", i+1),
@@ -146,24 +146,35 @@ func htmlToElements(htmlContent string) []parser.Element {
 	reHead := regexp.MustCompile(`(?is)<head[^>]*>.*?</head>`)
 	reScript := regexp.MustCompile(`(?is)<script[^>]*>.*?</script>`)
 	reStyle := regexp.MustCompile(`(?is)<style[^>]*>.*?</style>`)
-	
+
 	htmlContent = reHead.ReplaceAllString(htmlContent, "")
 	htmlContent = reScript.ReplaceAllString(htmlContent, "")
 	htmlContent = reStyle.ReplaceAllString(htmlContent, "")
 
-	// Extract headings
-	reHeading := regexp.MustCompile(`(?is)<h([1-6])[^>]*>(.*?)</h\1>`)
-	headingMatches := reHeading.FindAllStringSubmatch(htmlContent, -1)
-	for _, match := range headingMatches {
-		if len(match) >= 3 {
-			level := 1
-			fmt.Sscanf(match[1], "%d", &level)
-			text := stripHTMLTags(match[2])
-			if strings.TrimSpace(text) != "" {
-				elements = append(elements, &parser.Heading{
-					Text:  strings.TrimSpace(text),
-					Level: level,
-				})
+	// Extract headings (match each level separately since Go regexp doesn't support backreferences)
+	headingPatterns := []struct {
+		pattern *regexp.Regexp
+		level   int
+	}{
+		{regexp.MustCompile(`(?is)<h1[^>]*>(.*?)</h1>`), 1},
+		{regexp.MustCompile(`(?is)<h2[^>]*>(.*?)</h2>`), 2},
+		{regexp.MustCompile(`(?is)<h3[^>]*>(.*?)</h3>`), 3},
+		{regexp.MustCompile(`(?is)<h4[^>]*>(.*?)</h4>`), 4},
+		{regexp.MustCompile(`(?is)<h5[^>]*>(.*?)</h5>`), 5},
+		{regexp.MustCompile(`(?is)<h6[^>]*>(.*?)</h6>`), 6},
+	}
+
+	for _, hp := range headingPatterns {
+		matches := hp.pattern.FindAllStringSubmatch(htmlContent, -1)
+		for _, match := range matches {
+			if len(match) >= 2 {
+				text := strings.TrimSpace(stripHTMLTags(match[1]))
+				if text != "" {
+					elements = append(elements, &parser.Heading{
+						Text:  text,
+						Level: hp.level,
+					})
+				}
 			}
 		}
 	}
