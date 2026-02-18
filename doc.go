@@ -28,14 +28,17 @@
 //
 // Extract cover, annotation, or metadata without parsing full content (much faster):
 //
-//	// Extract cover image
-//	coverData, mimeType, err := parser.ExtractCover("/path/to/book.epub")
+//	// Extract cover image from file
+//	coverData, mimeType, err := parser.ExtractCoverFromFile("/path/to/book.epub")
 //
-//	// Extract annotation/description
-//	annotation, err := parser.ExtractAnnotation("/path/to/book.fb2")
+//	// Extract cover from reader (e.g., from ZIP archive)
+//	coverData, mimeType, err := parser.ExtractCoverFromReader(reader, size, "epub")
 //
-//	// Extract metadata only
-//	metadata, err := parser.ExtractMetadata("/path/to/book.epub")
+//	// Extract annotation/description from file
+//	annotation, err := parser.ExtractAnnotationFromFile("/path/to/book.fb2")
+//
+//	// Extract metadata from file
+//	metadata, err := parser.ExtractMetadataFromFile("/path/to/book.epub")
 //
 // # Rendering
 //

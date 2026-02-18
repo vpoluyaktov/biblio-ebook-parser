@@ -101,14 +101,14 @@ if err != nil {
 ```go
 import "github.com/vpoluyaktov/biblio-ebook-parser/parser"
 
-// Extract cover without parsing full book content (much faster!)
-coverData, mimeType, err := parser.ExtractCover("/path/to/book.epub")
+// Extract cover from file without parsing full book content (much faster!)
+coverData, mimeType, err := parser.ExtractCoverFromFile("/path/to/book.epub")
 if err != nil {
     log.Fatal(err)
 }
 
-// coverData contains the image bytes
-// mimeType is "image/jpeg" or "image/png"
+// Or extract from reader (e.g., from ZIP archive)
+coverData, mimeType, err := parser.ExtractCoverFromReader(reader, size, "epub")
 ```
 
 ### Fast Annotation Extraction
@@ -116,13 +116,14 @@ if err != nil {
 ```go
 import "github.com/vpoluyaktov/biblio-ebook-parser/parser"
 
-// Extract book description/annotation without parsing full content
-annotation, err := parser.ExtractAnnotation("/path/to/book.fb2")
+// Extract book description/annotation from file
+annotation, err := parser.ExtractAnnotationFromFile("/path/to/book.fb2")
 if err != nil {
     log.Fatal(err)
 }
 
-fmt.Println(annotation)
+// Or extract from reader
+annotation, err := parser.ExtractAnnotationFromReader(reader, size, "fb2")
 ```
 
 ### Fast Metadata Extraction
@@ -130,8 +131,8 @@ fmt.Println(annotation)
 ```go
 import "github.com/vpoluyaktov/biblio-ebook-parser/parser"
 
-// Extract only metadata without parsing content
-metadata, err := parser.ExtractMetadata("/path/to/book.epub")
+// Extract only metadata from file
+metadata, err := parser.ExtractMetadataFromFile("/path/to/book.epub")
 if err != nil {
     log.Fatal(err)
 }
@@ -139,6 +140,9 @@ if err != nil {
 fmt.Printf("Title: %s\n", metadata.Title)
 fmt.Printf("Authors: %v\n", metadata.Authors)
 fmt.Printf("Has cover: %v\n", len(metadata.CoverData) > 0)
+
+// Or extract from reader
+metadata, err := parser.ExtractMetadataFromReader(reader, size, "epub")
 ```
 
 ### Generate Placeholder Cover

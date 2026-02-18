@@ -15,12 +15,12 @@ import (
 // methods that read only the necessary parts of the ebook file, making them much faster
 // than full parsing when you only need specific metadata.
 type FastExtractor interface {
-	ExtractCover(filePath string) ([]byte, string, error)
-	ExtractCoverReader(r io.ReaderAt, size int64) ([]byte, string, error)
-	ExtractAnnotation(filePath string) (string, error)
-	ExtractAnnotationReader(r io.ReaderAt, size int64) (string, error)
-	ExtractMetadata(filePath string) (Metadata, error)
-	ExtractMetadataReader(r io.ReaderAt, size int64) (Metadata, error)
+	ExtractCoverFromFile(filePath string) ([]byte, string, error)
+	ExtractCoverFromReader(r io.ReaderAt, size int64) ([]byte, string, error)
+	ExtractAnnotationFromFile(filePath string) (string, error)
+	ExtractAnnotationFromReader(r io.ReaderAt, size int64) (string, error)
+	ExtractMetadataFromFile(filePath string) (Metadata, error)
+	ExtractMetadataFromReader(r io.ReaderAt, size int64) (Metadata, error)
 }
 
 var (
@@ -47,63 +47,63 @@ func getExtractor(format string) (FastExtractor, error) {
 	return extractor, nil
 }
 
-// ExtractCover extracts only the cover image from an ebook file without parsing the full content.
+// ExtractCoverFromFile extracts only the cover image from an ebook file without parsing the full content.
 // This is much faster than Parse() when you only need the cover.
 // Supported formats: EPUB, FB2
-func ExtractCover(filePath string) ([]byte, string, error) {
+func ExtractCoverFromFile(filePath string) ([]byte, string, error) {
 	format := detectFormat(filePath)
 	extractor, err := getExtractor(format)
 	if err != nil {
 		return nil, "", err
 	}
-	return extractor.ExtractCover(filePath)
+	return extractor.ExtractCoverFromFile(filePath)
 }
 
-// ExtractCoverReader extracts only the cover image from an ebook reader without parsing the full content.
-func ExtractCoverReader(r io.ReaderAt, size int64, format string) ([]byte, string, error) {
+// ExtractCoverFromReader extracts only the cover image from an ebook reader without parsing the full content.
+func ExtractCoverFromReader(r io.ReaderAt, size int64, format string) ([]byte, string, error) {
 	extractor, err := getExtractor(format)
 	if err != nil {
 		return nil, "", err
 	}
-	return extractor.ExtractCoverReader(r, size)
+	return extractor.ExtractCoverFromReader(r, size)
 }
 
-// ExtractAnnotation extracts only the description/annotation from an ebook file without parsing the full content.
-func ExtractAnnotation(filePath string) (string, error) {
+// ExtractAnnotationFromFile extracts only the description/annotation from an ebook file without parsing the full content.
+func ExtractAnnotationFromFile(filePath string) (string, error) {
 	format := detectFormat(filePath)
 	extractor, err := getExtractor(format)
 	if err != nil {
 		return "", err
 	}
-	return extractor.ExtractAnnotation(filePath)
+	return extractor.ExtractAnnotationFromFile(filePath)
 }
 
-// ExtractAnnotationReader extracts only the description/annotation from an ebook reader without parsing the full content.
-func ExtractAnnotationReader(r io.ReaderAt, size int64, format string) (string, error) {
+// ExtractAnnotationFromReader extracts only the description/annotation from an ebook reader without parsing the full content.
+func ExtractAnnotationFromReader(r io.ReaderAt, size int64, format string) (string, error) {
 	extractor, err := getExtractor(format)
 	if err != nil {
 		return "", err
 	}
-	return extractor.ExtractAnnotationReader(r, size)
+	return extractor.ExtractAnnotationFromReader(r, size)
 }
 
-// ExtractMetadata extracts only metadata from an ebook file without parsing the full content.
-func ExtractMetadata(filePath string) (Metadata, error) {
+// ExtractMetadataFromFile extracts only metadata from an ebook file without parsing the full content.
+func ExtractMetadataFromFile(filePath string) (Metadata, error) {
 	format := detectFormat(filePath)
 	extractor, err := getExtractor(format)
 	if err != nil {
 		return Metadata{}, err
 	}
-	return extractor.ExtractMetadata(filePath)
+	return extractor.ExtractMetadataFromFile(filePath)
 }
 
-// ExtractMetadataReader extracts only metadata from an ebook reader without parsing the full content.
-func ExtractMetadataReader(r io.ReaderAt, size int64, format string) (Metadata, error) {
+// ExtractMetadataFromReader extracts only metadata from an ebook reader without parsing the full content.
+func ExtractMetadataFromReader(r io.ReaderAt, size int64, format string) (Metadata, error) {
 	extractor, err := getExtractor(format)
 	if err != nil {
 		return Metadata{}, err
 	}
-	return extractor.ExtractMetadataReader(r, size)
+	return extractor.ExtractMetadataFromReader(r, size)
 }
 
 // detectFormat detects the ebook format from file extension
