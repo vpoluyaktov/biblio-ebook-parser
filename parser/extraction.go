@@ -9,7 +9,11 @@ import (
 )
 
 // FastExtractor defines the interface for fast metadata/cover/annotation extraction
-// without parsing the full book content
+// without parsing the full book content.
+//
+// This interface allows format-specific implementations to provide optimized extraction
+// methods that read only the necessary parts of the ebook file, making them much faster
+// than full parsing when you only need specific metadata.
 type FastExtractor interface {
 	ExtractCover(filePath string) ([]byte, string, error)
 	ExtractCoverReader(r io.ReaderAt, size int64) ([]byte, string, error)

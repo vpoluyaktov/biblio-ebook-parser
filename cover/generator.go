@@ -1,3 +1,16 @@
+// Package cover provides functionality for generating placeholder book covers.
+//
+// When an ebook doesn't have an embedded cover image, this package can generate
+// a beautiful placeholder cover with the book's title and author name, using
+// embedded fonts and an ornate template image.
+//
+// Example usage:
+//
+//	coverData, err := cover.GeneratePlaceholder("The Great Gatsby", "F. Scott Fitzgerald")
+//	if err != nil {
+//	    log.Fatal(err)
+//	}
+//	// coverData contains JPEG image bytes
 package cover
 
 import (
