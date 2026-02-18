@@ -320,44 +320,44 @@ func parseSeriesNumber(s string) int {
 // XML structures for FB2 parsing
 
 type fb2Document struct {
-	XMLName     xml.Name `xml:"FictionBook"`
+	XMLName     xml.Name `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 FictionBook"`
 	Description struct {
 		TitleInfo struct {
 			Author struct {
-				FirstName  string `xml:"first-name"`
-				LastName   string `xml:"last-name"`
-				MiddleName string `xml:"middle-name"`
-			} `xml:"author"`
-			BookTitle  string   `xml:"book-title"`
-			Genres     []string `xml:"genre"`
-			Lang       string   `xml:"lang"`
+				FirstName  string `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 first-name"`
+				LastName   string `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 last-name"`
+				MiddleName string `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 middle-name"`
+			} `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 author"`
+			BookTitle  string   `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 book-title"`
+			Genres     []string `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 genre"`
+			Lang       string   `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 lang"`
 			Annotation struct {
-				Paragraphs []string `xml:"p"`
-			} `xml:"annotation"`
+				Paragraphs []string `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 p"`
+			} `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 annotation"`
 			Sequence struct {
 				Name   string `xml:"name,attr"`
 				Number string `xml:"number,attr"`
-			} `xml:"sequence"`
+			} `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 sequence"`
 			Coverpage struct {
-				Images []fb2Image `xml:"image"`
-			} `xml:"coverpage"`
-		} `xml:"title-info"`
-	} `xml:"description"`
-	Bodies   []fb2Body   `xml:"body"`
-	Binaries []fb2Binary `xml:"binary"`
+				Images []fb2Image `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 image"`
+			} `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 coverpage"`
+		} `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 title-info"`
+	} `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 description"`
+	Bodies   []fb2Body   `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 body"`
+	Binaries []fb2Binary `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 binary"`
 }
 
 type fb2Body struct {
 	Name     string       `xml:"name,attr"`
-	Title    fb2Title     `xml:"title"`
-	Sections []fb2Section `xml:"section"`
+	Title    fb2Title     `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 title"`
+	Sections []fb2Section `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 section"`
 }
 
 type fb2Section struct {
-	Title      fb2Title      `xml:"title"`
-	Paragraphs []fb2Para     `xml:"p"`
-	Epigraphs  []fb2Epigraph `xml:"epigraph"`
-	Sections   []fb2Section  `xml:"section"`
+	Title      fb2Title      `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 title"`
+	Paragraphs []fb2Para     `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 p"`
+	Epigraphs  []fb2Epigraph `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 epigraph"`
+	Sections   []fb2Section  `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 section"`
 }
 
 type fb2Title struct {
@@ -369,7 +369,7 @@ type fb2Para struct {
 }
 
 type fb2Epigraph struct {
-	Paragraphs []fb2Para `xml:"p"`
+	Paragraphs []fb2Para `xml:"http://www.gribuser.ru/xml/fictionbook/2.0 p"`
 }
 
 type fb2Image struct {
