@@ -20,15 +20,8 @@ func NewParser() *Parser {
 }
 
 func init() {
-	// Register fast extraction functions
-	parser.RegisterEPUBExtractors(
-		ExtractCoverOnly,
-		ExtractCoverOnlyReader,
-		ExtractAnnotationOnly,
-		ExtractAnnotationOnlyReader,
-		ExtractMetadataOnly,
-		ExtractMetadataOnlyReader,
-	)
+	// Register EPUB fast extractor
+	parser.RegisterExtractor("epub", &Extractor{})
 }
 
 // Format returns the format identifier

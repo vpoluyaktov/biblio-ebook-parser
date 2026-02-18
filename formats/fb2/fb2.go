@@ -32,15 +32,8 @@ func NewParser() *Parser {
 }
 
 func init() {
-	// Register fast extraction functions
-	parser.RegisterFB2Extractors(
-		ExtractCoverOnly,
-		ExtractCoverOnlyReader,
-		ExtractAnnotationOnly,
-		ExtractAnnotationOnlyReader,
-		ExtractMetadataOnly,
-		ExtractMetadataOnlyReader,
-	)
+	// Register FB2 fast extractor
+	parser.RegisterExtractor("fb2", &Extractor{})
 }
 
 // Format returns the format identifier

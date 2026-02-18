@@ -5,128 +5,101 @@ import (
 	"io"
 	"path/filepath"
 	"strings"
+	"sync"
 )
+
+// FastExtractor defines the interface for fast metadata/cover/annotation extraction
+// without parsing the full book content
+type FastExtractor interface {
+	ExtractCover(filePath string) ([]byte, string, error)
+	ExtractCoverReader(r io.ReaderAt, size int64) ([]byte, string, error)
+	ExtractAnnotation(filePath string) (string, error)
+	ExtractAnnotationReader(r io.ReaderAt, size int64) (string, error)
+	ExtractMetadata(filePath string) (Metadata, error)
+	ExtractMetadataReader(r io.ReaderAt, size int64) (Metadata, error)
+}
+
+var (
+	extractors   = make(map[string]FastExtractor)
+	extractorsMu sync.RWMutex
+)
+
+// RegisterExtractor registers a fast extractor for a specific format
+func RegisterExtractor(format string, extractor FastExtractor) {
+	extractorsMu.Lock()
+	defer extractorsMu.Unlock()
+	extractors[format] = extractor
+}
+
+// getExtractor returns the extractor for a given format
+func getExtractor(format string) (FastExtractor, error) {
+	extractorsMu.RLock()
+	defer extractorsMu.RUnlock()
+
+	extractor, ok := extractors[format]
+	if !ok {
+		return nil, fmt.Errorf("no extractor registered for format: %s", format)
+	}
+	return extractor, nil
+}
 
 // ExtractCover extracts only the cover image from an ebook file without parsing the full content.
 // This is much faster than Parse() when you only need the cover.
 // Supported formats: EPUB, FB2
 func ExtractCover(filePath string) ([]byte, string, error) {
 	format := detectFormat(filePath)
-
-	// Use format-specific fast extraction
-	switch format {
-	case "epub":
-		if extractEPUBCover == nil {
-			return nil, "", fmt.Errorf("EPUB extractor not registered")
-		}
-		return extractEPUBCover(filePath)
-	case "fb2":
-		if extractFB2Cover == nil {
-			return nil, "", fmt.Errorf("FB2 extractor not registered")
-		}
-		return extractFB2Cover(filePath)
-	default:
-		return nil, "", fmt.Errorf("cover extraction not supported for format: %s", format)
+	extractor, err := getExtractor(format)
+	if err != nil {
+		return nil, "", err
 	}
+	return extractor.ExtractCover(filePath)
 }
 
 // ExtractCoverReader extracts only the cover image from an ebook reader without parsing the full content.
 func ExtractCoverReader(r io.ReaderAt, size int64, format string) ([]byte, string, error) {
-	// Use format-specific fast extraction
-	switch format {
-	case "epub":
-		if extractEPUBCoverReader == nil {
-			return nil, "", fmt.Errorf("EPUB extractor not registered")
-		}
-		return extractEPUBCoverReader(r, size)
-	case "fb2":
-		if extractFB2CoverReader == nil {
-			return nil, "", fmt.Errorf("FB2 extractor not registered")
-		}
-		return extractFB2CoverReader(r, size)
-	default:
-		return nil, "", fmt.Errorf("cover extraction not supported for format: %s", format)
+	extractor, err := getExtractor(format)
+	if err != nil {
+		return nil, "", err
 	}
+	return extractor.ExtractCoverReader(r, size)
 }
 
 // ExtractAnnotation extracts only the description/annotation from an ebook file without parsing the full content.
 func ExtractAnnotation(filePath string) (string, error) {
 	format := detectFormat(filePath)
-
-	// Use format-specific fast extraction
-	switch format {
-	case "epub":
-		if extractEPUBAnnotation == nil {
-			return "", fmt.Errorf("EPUB extractor not registered")
-		}
-		return extractEPUBAnnotation(filePath)
-	case "fb2":
-		if extractFB2Annotation == nil {
-			return "", fmt.Errorf("FB2 extractor not registered")
-		}
-		return extractFB2Annotation(filePath)
-	default:
-		return "", fmt.Errorf("annotation extraction not supported for format: %s", format)
+	extractor, err := getExtractor(format)
+	if err != nil {
+		return "", err
 	}
+	return extractor.ExtractAnnotation(filePath)
 }
 
 // ExtractAnnotationReader extracts only the description/annotation from an ebook reader without parsing the full content.
 func ExtractAnnotationReader(r io.ReaderAt, size int64, format string) (string, error) {
-	// Use format-specific fast extraction
-	switch format {
-	case "epub":
-		if extractEPUBAnnotationReader == nil {
-			return "", fmt.Errorf("EPUB extractor not registered")
-		}
-		return extractEPUBAnnotationReader(r, size)
-	case "fb2":
-		if extractFB2AnnotationReader == nil {
-			return "", fmt.Errorf("FB2 extractor not registered")
-		}
-		return extractFB2AnnotationReader(r, size)
-	default:
-		return "", fmt.Errorf("annotation extraction not supported for format: %s", format)
+	extractor, err := getExtractor(format)
+	if err != nil {
+		return "", err
 	}
+	return extractor.ExtractAnnotationReader(r, size)
 }
 
 // ExtractMetadata extracts only metadata from an ebook file without parsing the full content.
 func ExtractMetadata(filePath string) (Metadata, error) {
 	format := detectFormat(filePath)
-
-	// Use format-specific fast extraction
-	switch format {
-	case "epub":
-		if extractEPUBMetadata == nil {
-			return Metadata{}, fmt.Errorf("EPUB extractor not registered")
-		}
-		return extractEPUBMetadata(filePath)
-	case "fb2":
-		if extractFB2Metadata == nil {
-			return Metadata{}, fmt.Errorf("FB2 extractor not registered")
-		}
-		return extractFB2Metadata(filePath)
-	default:
-		return Metadata{}, fmt.Errorf("metadata extraction not supported for format: %s", format)
+	extractor, err := getExtractor(format)
+	if err != nil {
+		return Metadata{}, err
 	}
+	return extractor.ExtractMetadata(filePath)
 }
 
 // ExtractMetadataReader extracts only metadata from an ebook reader without parsing the full content.
 func ExtractMetadataReader(r io.ReaderAt, size int64, format string) (Metadata, error) {
-	// Use format-specific fast extraction
-	switch format {
-	case "epub":
-		if extractEPUBMetadataReader == nil {
-			return Metadata{}, fmt.Errorf("EPUB extractor not registered")
-		}
-		return extractEPUBMetadataReader(r, size)
-	case "fb2":
-		if extractFB2MetadataReader == nil {
-			return Metadata{}, fmt.Errorf("FB2 extractor not registered")
-		}
-		return extractFB2MetadataReader(r, size)
-	default:
-		return Metadata{}, fmt.Errorf("metadata extraction not supported for format: %s", format)
+	extractor, err := getExtractor(format)
+	if err != nil {
+		return Metadata{}, err
 	}
+	return extractor.ExtractMetadataReader(r, size)
 }
 
 // detectFormat detects the ebook format from file extension
@@ -148,55 +121,4 @@ func detectFormat(filePath string) string {
 	default:
 		return "unknown"
 	}
-}
-
-// These functions will be implemented by format-specific packages
-var (
-	extractEPUBCover            func(string) ([]byte, string, error)
-	extractEPUBCoverReader      func(io.ReaderAt, int64) ([]byte, string, error)
-	extractEPUBAnnotation       func(string) (string, error)
-	extractEPUBAnnotationReader func(io.ReaderAt, int64) (string, error)
-	extractEPUBMetadata         func(string) (Metadata, error)
-	extractEPUBMetadataReader   func(io.ReaderAt, int64) (Metadata, error)
-
-	extractFB2Cover            func(string) ([]byte, string, error)
-	extractFB2CoverReader      func(io.ReaderAt, int64) ([]byte, string, error)
-	extractFB2Annotation       func(string) (string, error)
-	extractFB2AnnotationReader func(io.ReaderAt, int64) (string, error)
-	extractFB2Metadata         func(string) (Metadata, error)
-	extractFB2MetadataReader   func(io.ReaderAt, int64) (Metadata, error)
-)
-
-// RegisterEPUBExtractors registers EPUB-specific extraction functions
-func RegisterEPUBExtractors(
-	cover func(string) ([]byte, string, error),
-	coverReader func(io.ReaderAt, int64) ([]byte, string, error),
-	annotation func(string) (string, error),
-	annotationReader func(io.ReaderAt, int64) (string, error),
-	metadata func(string) (Metadata, error),
-	metadataReader func(io.ReaderAt, int64) (Metadata, error),
-) {
-	extractEPUBCover = cover
-	extractEPUBCoverReader = coverReader
-	extractEPUBAnnotation = annotation
-	extractEPUBAnnotationReader = annotationReader
-	extractEPUBMetadata = metadata
-	extractEPUBMetadataReader = metadataReader
-}
-
-// RegisterFB2Extractors registers FB2-specific extraction functions
-func RegisterFB2Extractors(
-	cover func(string) ([]byte, string, error),
-	coverReader func(io.ReaderAt, int64) ([]byte, string, error),
-	annotation func(string) (string, error),
-	annotationReader func(io.ReaderAt, int64) (string, error),
-	metadata func(string) (Metadata, error),
-	metadataReader func(io.ReaderAt, int64) (Metadata, error),
-) {
-	extractFB2Cover = cover
-	extractFB2CoverReader = coverReader
-	extractFB2Annotation = annotation
-	extractFB2AnnotationReader = annotationReader
-	extractFB2Metadata = metadata
-	extractFB2MetadataReader = metadataReader
 }
