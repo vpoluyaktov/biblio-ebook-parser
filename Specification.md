@@ -267,10 +267,38 @@ If issues arise:
 - [ ] New formats can be added easily
 - [ ] Performance is equal or better
 
+## Recent Changes
+
+### 2026-02-18: Cover Extraction, Annotation Extraction, and Cover Generation
+
+**Added fast extraction methods** that don't require parsing full book content:
+- `ExtractCover()` / `ExtractCoverReader()` - Extract cover images without parsing content
+- `ExtractAnnotation()` / `ExtractAnnotationReader()` - Extract descriptions/annotations without parsing content
+- `ExtractMetadata()` / `ExtractMetadataReader()` - Extract metadata without parsing content
+
+**Benefits:**
+- Much faster than full parsing when you only need cover or annotation
+- Reduces memory usage for large ebooks
+- Eliminates code duplication between catalog and audiobook builder
+
+**Added cover generation functionality:**
+- Moved `cover.GeneratePlaceholder()` from catalog to unified library
+- Generates beautiful book covers with title and author text
+- Uses embedded fonts and ornate template image
+- Eliminates duplicate cover generation code
+
+**Implementation:**
+- Format-specific fast extraction in `formats/epub/metadata.go` and `formats/fb2/metadata.go`
+- Unified API in `parser/extraction.go` for format-agnostic access
+- Cover generation in `cover/generator.go` with embedded assets
+- Registration system allows format packages to provide extractors
+
 ## Current Status
 
-**Phase 1: Core Infrastructure** - ✅ In Progress
+**Phase 1: Core Infrastructure** - ✅ Complete
 - Repository created
 - Go module initialized
-- README and Specification drafted
-- Next: Implement core interfaces
+- Core interfaces implemented
+- Parser registry functional
+- Fast extraction methods added
+- Cover generation functionality added
