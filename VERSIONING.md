@@ -56,7 +56,7 @@ git commit -m "chore: update parser to v0.1.1"
 ### 4. Rebuild and deploy
 
 ```bash
-cd /home/ubuntu/git/biblio-hub/scripts
+cd /home/ubuntu/git/biblio/biblio-hub/scripts
 ./stop_stack.sh
 ./rebuild_stack.sh
 ./start_stack.sh
