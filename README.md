@@ -2,8 +2,6 @@
 
 > Part of the [BiblioHub](https://github.com/vpoluyaktov/biblio-hub) application suite
 
-![Biblio Ebook Parser](docs/images/biblio-ebook-parser-diagram.png)
-
 A shared Go library for e-book parsing used by [biblio-ebooks-catalog](https://github.com/vpoluyaktov/biblio-ebooks-catalog) and [biblio-audiobook-builder-tts](https://github.com/vpoluyaktov/biblio-audiobook-builder-tts). Provides format-agnostic parsing, pluggable rendering, and fast metadata extraction.
 
 **Live demo (via Biblio Catalog): [https://demo.bibliohub.org/catalog/](https://demo.bibliohub.org/catalog/)**
