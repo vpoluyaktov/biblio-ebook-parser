@@ -1,177 +1,27 @@
 # Biblio Ebook Parser
 
-[![Go Reference](https://pkg.go.dev/badge/github.com/vpoluyaktov/biblio-ebook-parser.svg)](https://pkg.go.dev/github.com/vpoluyaktov/biblio-ebook-parser)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+> Part of the [BiblioHub](https://github.com/vpoluyaktov/biblio-hub) application suite
 
-A unified ebook parser library for the Biblio suite that provides format-agnostic parsing, flexible rendering, and fast metadata extraction capabilities.
+![Biblio Ebook Parser](docs/images/biblio-ebook-parser-diagram.png)
+
+A shared Go library for e-book parsing used by [biblio-ebooks-catalog](https://github.com/vpoluyaktov/biblio-ebooks-catalog) and [biblio-audiobook-builder-tts](https://github.com/vpoluyaktov/biblio-audiobook-builder-tts). Provides format-agnostic parsing, pluggable rendering, and fast metadata extraction.
+
+**Live demo (via Biblio Catalog): [https://demo.bibliohub.org/catalog/](https://demo.bibliohub.org/catalog/)**
 
 ## Features
 
-- **Multi-format support**: EPUB, FB2, and extensible for additional formats (MOBI, AZW3, PDF)
-- **Fast extraction**: Extract covers, annotations, and metadata without parsing full content
-- **Cover generation**: Generate beautiful placeholder covers with embedded fonts
-- **Separation of concerns**: Parsing logic separated from output rendering
-- **Pluggable renderers**: HTML (for web readers), PlainText (for TTS), and custom renderers
-- **Robust error handling**: Handles malformed files, encoding issues, and edge cases
-- **Thread-safe**: Safe for concurrent use
-- **Type-safe**: Strongly-typed Go interfaces and data structures
+- **Multi-format support** — EPUB (2.0, 3.0) and FB2 (FictionBook 2.0)
+- **Fast extraction** — Extract covers, annotations, and metadata without parsing full content
+- **Cover generation** — Generate placeholder covers with embedded fonts
+- **Pluggable renderers** — HTML (for web readers), PlainText (for TTS)
+- **Robust error handling** — Handles malformed files, encoding issues, and edge cases
+- **Thread-safe** — Safe for concurrent use
 
-## Architecture
+## Technology Stack
 
-```
-biblio-ebook-parser/
-├── parser/              # Core parser interfaces and registry
-├── formats/             # Format-specific parsers
-│   ├── epub/           # EPUB parser with fast extraction
-│   └── fb2/            # FB2 parser with fast extraction
-├── renderer/           # Output renderers
-│   ├── html/           # HTML renderer (for web readers)
-│   ├── plaintext/      # PlainText renderer (for TTS)
-│   └── ssml/           # SSML renderer (future)
-├── cover/              # Cover generation with embedded assets
-└── testdata/           # Test fixtures
-```
-
-## Usage
-
-### Basic Parsing
-
-```go
-import (
-    "github.com/vpoluyaktov/biblio-ebook-parser/parser"
-    "github.com/vpoluyaktov/biblio-ebook-parser/formats/epub"
-)
-
-// Parse an EPUB file
-p := epub.NewParser()
-book, err := p.Parse("/path/to/book.epub")
-if err != nil {
-    log.Fatal(err)
-}
-
-fmt.Printf("Title: %s\n", book.Metadata.Title)
-fmt.Printf("Author: %s\n", book.Metadata.Authors[0].FullName())
-fmt.Printf("Chapters: %d\n", len(book.Content.Chapters))
-```
-
-### Rendering for Web Reader (HTML)
-
-```go
-import (
-    "github.com/vpoluyaktov/biblio-ebook-parser/renderer/html"
-)
-
-// Render book content as HTML for web reader
-renderer := html.NewRenderer(html.Config{
-    PreserveStructure: true,
-})
-
-content, err := renderer.RenderContent(book)
-if err != nil {
-    log.Fatal(err)
-}
-
-// content.Chapters[0].Content contains HTML
-```
-
-### Rendering for TTS (PlainText)
-
-```go
-import (
-    "github.com/vpoluyaktov/biblio-ebook-parser/renderer/plaintext"
-)
-
-// Render book content as plain text for TTS
-renderer := plaintext.NewRenderer(plaintext.Config{
-    AddPeriods:    true,  // Add periods to paragraphs
-    InsertMarkers: true,  // Insert SSML markers
-    NormalizeText: true,  // Normalize text for speech
-})
-
-content, err := renderer.RenderContent(book)
-if err != nil {
-    log.Fatal(err)
-}
-
-// content.Chapters[0].Content contains plain text
-```
-
-### Fast Cover Extraction (Without Full Parsing)
-
-```go
-import "github.com/vpoluyaktov/biblio-ebook-parser/parser"
-
-// Extract cover from file without parsing full book content (much faster!)
-coverData, mimeType, err := parser.ExtractCoverFromFile("/path/to/book.epub")
-if err != nil {
-    log.Fatal(err)
-}
-
-// Or extract from reader (e.g., from ZIP archive)
-coverData, mimeType, err := parser.ExtractCoverFromReader(reader, size, "epub")
-```
-
-### Fast Annotation Extraction
-
-```go
-import "github.com/vpoluyaktov/biblio-ebook-parser/parser"
-
-// Extract book description/annotation from file
-annotation, err := parser.ExtractAnnotationFromFile("/path/to/book.fb2")
-if err != nil {
-    log.Fatal(err)
-}
-
-// Or extract from reader
-annotation, err := parser.ExtractAnnotationFromReader(reader, size, "fb2")
-```
-
-### Fast Metadata Extraction
-
-```go
-import "github.com/vpoluyaktov/biblio-ebook-parser/parser"
-
-// Extract only metadata from file
-metadata, err := parser.ExtractMetadataFromFile("/path/to/book.epub")
-if err != nil {
-    log.Fatal(err)
-}
-
-fmt.Printf("Title: %s\n", metadata.Title)
-fmt.Printf("Authors: %v\n", metadata.Authors)
-fmt.Printf("Has cover: %v\n", len(metadata.CoverData) > 0)
-
-// Or extract from reader
-metadata, err := parser.ExtractMetadataFromReader(reader, size, "epub")
-```
-
-### Generate Placeholder Cover
-
-```go
-import "github.com/vpoluyaktov/biblio-ebook-parser/cover"
-
-// Generate a beautiful cover image when book has no cover
-coverData, err := cover.GeneratePlaceholder("The Great Gatsby", "F. Scott Fitzgerald")
-if err != nil {
-    log.Fatal(err)
-}
-
-// coverData contains JPEG image bytes
-```
-
-### Using the Registry
-
-```go
-import "github.com/vpoluyaktov/biblio-ebook-parser/parser"
-
-// Get parser by format
-p, err := parser.GetParser("epub")
-if err != nil {
-    log.Fatal(err)
-}
-
-book, err := p.Parse("/path/to/book.epub")
-```
+- **Language**: Go 1.24+
+- **Formats**: EPUB, FB2
+- **Type**: Library (imported as Go module)
 
 ## Installation
 
@@ -179,29 +29,86 @@ book, err := p.Parse("/path/to/book.epub")
 go get github.com/vpoluyaktov/biblio-ebook-parser
 ```
 
-## Supported Formats
+## Architecture
 
-- ✅ **EPUB** (2.0, 3.0) - Full support with TOC extraction
-- ✅ **FB2** (FictionBook 2.0) - Full support with encoding handling
-- 🚧 **MOBI** - Planned
-- 🚧 **AZW3** - Planned
-- 🚧 **PDF** - Planned
+```
+biblio-ebook-parser/
+├── parser/              # Core parser interfaces and registry
+├── formats/
+│   ├── epub/            # EPUB parser with fast extraction
+│   └── fb2/             # FB2 parser with fast extraction
+├── renderer/
+│   ├── html/            # HTML renderer (for web readers)
+│   └── plaintext/       # PlainText renderer (for TTS)
+├── cover/               # Placeholder cover generation
+└── testdata/            # Test fixtures
+```
 
-## API Documentation
+## Usage
 
-Full API documentation is available at [pkg.go.dev](https://pkg.go.dev/github.com/vpoluyaktov/biblio-ebook-parser).
+### Basic Parsing
 
-### Key Interfaces
+```go
+import "github.com/vpoluyaktov/biblio-ebook-parser/formats/epub"
 
-- **`parser.Parser`** - Main parser interface for full book parsing
-- **`parser.FastExtractor`** - Interface for fast metadata/cover extraction
-- **`renderer.Renderer`** - Interface for rendering parsed content
+p := epub.NewParser()
+book, err := p.Parse("/path/to/book.epub")
 
-### Performance Tips
+fmt.Printf("Title: %s\n", book.Metadata.Title)
+fmt.Printf("Chapters: %d\n", len(book.Content.Chapters))
+```
 
-1. **Use fast extraction** when you only need cover, annotation, or metadata
-2. **Parse once, render multiple times** - Parse the book once, then use different renderers
-3. **Use io.ReaderAt** when possible to avoid loading entire file into memory
+### Fast Cover Extraction
+
+```go
+import "github.com/vpoluyaktov/biblio-ebook-parser/parser"
+
+coverData, mimeType, err := parser.ExtractCoverFromFile("/path/to/book.epub")
+```
+
+### Fast Metadata Extraction
+
+```go
+import "github.com/vpoluyaktov/biblio-ebook-parser/parser"
+
+metadata, err := parser.ExtractMetadataFromFile("/path/to/book.epub")
+```
+
+### Rendering for TTS
+
+```go
+import "github.com/vpoluyaktov/biblio-ebook-parser/renderer/plaintext"
+
+renderer := plaintext.NewRenderer(plaintext.Config{
+    AddPeriods:    true,
+    InsertMarkers: true,
+    NormalizeText: true,
+})
+content, err := renderer.RenderContent(book)
+```
+
+### Rendering for Web Reader
+
+```go
+import "github.com/vpoluyaktov/biblio-ebook-parser/renderer/html"
+
+renderer := html.NewRenderer(html.Config{PreserveStructure: true})
+content, err := renderer.RenderContent(book)
+```
+
+### Placeholder Cover Generation
+
+```go
+import "github.com/vpoluyaktov/biblio-ebook-parser/cover"
+
+coverData, err := cover.GeneratePlaceholder("The Great Gatsby", "F. Scott Fitzgerald")
+```
+
+## Key Interfaces
+
+- **`parser.Parser`** — Full book parsing
+- **`parser.FastExtractor`** — Fast metadata/cover extraction without full parse
+- **`renderer.Renderer`** — Render parsed content to different output formats
 
 ## Testing
 
@@ -211,8 +118,4 @@ go test ./...
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) file for details.
-
-## Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
+MIT
